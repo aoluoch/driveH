@@ -75,6 +75,8 @@ async function createAttributes(collectionId) {
     // Array of storage file IDs
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'images',      255,  false, null, true),
     () => databases.createBooleanAttribute(DATABASE_ID, collectionId, 'isSold',     false, false),
+    () => databases.createEnumAttribute(DATABASE_ID, collectionId, 'bodyType',
+          ['Sedan', 'Hatchback', 'SUV', 'Pickup', 'Van', 'Coupe', 'Convertible', 'Wagon', 'Minivan'], false),
     // Array of feature strings (AI-generated or manual)
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'features',    255,  false, null, true),
   ]

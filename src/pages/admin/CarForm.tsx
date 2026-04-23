@@ -24,6 +24,7 @@ const EMPTY_FORM: CarFormData = {
   transmission: 'Automatic',
   engine: '',
   condition: 'Used',
+  bodyType: '',
   description: '',
   location: '',
   images: [],
@@ -301,6 +302,15 @@ export default function CarForm() {
               <Field label="Condition">
                 <select value={form.condition} onChange={(e) => set('condition', e.target.value as CarFormData['condition'])} className={selectCls}>
                   {['New', 'Used', 'Certified Pre-Owned'].map((v) => <option key={v}>{v}</option>)}
+                </select>
+              </Field>
+
+              <Field label="Body Type">
+                <select value={form.bodyType} onChange={(e) => set('bodyType', e.target.value as CarFormData['bodyType'])} className={selectCls}>
+                  <option value="">Select body type</option>
+                  {['Sedan', 'Hatchback', 'SUV', 'Pickup', 'Van', 'Coupe', 'Convertible', 'Wagon', 'Minivan'].map((v) => (
+                    <option key={v}>{v}</option>
+                  ))}
                 </select>
               </Field>
 

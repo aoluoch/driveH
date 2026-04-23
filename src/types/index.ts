@@ -1,6 +1,7 @@
 export type FuelType = 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid' | 'CNG'
 export type Transmission = 'Automatic' | 'Manual'
 export type Condition = 'New' | 'Used' | 'Certified Pre-Owned'
+export type BodyType = 'Sedan' | 'Hatchback' | 'SUV' | 'Pickup' | 'Van' | 'Coupe' | 'Convertible' | 'Wagon' | 'Minivan'
 
 export interface Car {
   $id: string
@@ -17,6 +18,7 @@ export interface Car {
   engine: string
   condition: Condition
   description: string
+  bodyType: BodyType | ''
   location: string
   images: string[]
   isSold: boolean
@@ -34,6 +36,8 @@ export interface CarFilters {
   fuelType?: string
   transmission?: string
   condition?: string
+  bodyType?: string
+  brand?: string
   showSold?: boolean
 }
 

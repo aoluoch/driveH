@@ -1,9 +1,16 @@
+import { ID } from 'appwrite'
 import { account } from './appwrite'
 import type { Models } from 'appwrite'
 
 export type AppUser = Models.User<Models.Preferences>
 
 export async function loginAdmin(email: string, password: string): Promise<AppUser> {
+  await account.createEmailPasswordSession(email, password)
+  return account.get()
+}
+
+export async function registerUser(name: string, email: string, password: string): Promise<AppUser> {
+  await account.create(ID.unique(), email, password, name)
   await account.createEmailPasswordSession(email, password)
   return account.get()
 }

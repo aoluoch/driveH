@@ -34,6 +34,8 @@ export async function listCars(filters: CarFilters = {}): Promise<Car[]> {
   if (filters.fuelType)     queries.push(Query.equal('fuelType', filters.fuelType))
   if (filters.transmission) queries.push(Query.equal('transmission', filters.transmission))
   if (filters.condition)    queries.push(Query.equal('condition', filters.condition))
+  if (filters.bodyType)     queries.push(Query.equal('bodyType', filters.bodyType))
+  if (filters.brand)        queries.push(Query.equal('brand', filters.brand))
   if (filters.minPrice !== undefined) queries.push(Query.greaterThanEqual('price', filters.minPrice))
   if (filters.maxPrice !== undefined) queries.push(Query.lessThanEqual('price', filters.maxPrice))
   if (filters.minYear !== undefined)  queries.push(Query.greaterThanEqual('year', filters.minYear))
