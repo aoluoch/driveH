@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Filter, Loader2, RotateCcw, SearchX, SlidersHor
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 import CarCard from '../components/cars/CarCard'
+import CarBrandLogo from '../components/cars/CarBrandLogo'
 import { listCars } from '../lib/cars'
 import type { Car as CarType, CarFilters } from '../types'
 
@@ -124,6 +125,7 @@ export default function Browse() {
                 onChange={() => setFilter({ brand: filters.brand === b ? undefined : b })}
                 className="w-4 h-4 accent-[#FF5400]"
               />
+              <CarBrandLogo brand={b} size={20} className="flex-shrink-0" aria-label={b} />
               <span className="text-sm text-gray-700 group-hover:text-[#FF5400]">{b}</span>
             </label>
           ))}

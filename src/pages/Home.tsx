@@ -4,19 +4,11 @@ import { ArrowRight, Car, CheckCircle, Loader2, Search, Shield, Star, ThumbsUp, 
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 import CarCard from '../components/cars/CarCard'
+import CarBrandLogo from '../components/cars/CarBrandLogo'
 import { listCars } from '../lib/cars'
 import type { Car as CarType } from '../types'
 
-const POPULAR_MAKES = [
-  { name: 'Toyota', emoji: '🚗' },
-  { name: 'Honda', emoji: '🚙' },
-  { name: 'BMW', emoji: '🏎️' },
-  { name: 'Mercedes', emoji: '⭐' },
-  { name: 'Ford', emoji: '🛻' },
-  { name: 'Nissan', emoji: '🚕' },
-  { name: 'Volkswagen', emoji: '🚐' },
-  { name: 'Subaru', emoji: '🏔️' },
-]
+const POPULAR_MAKES = ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Ford', 'Nissan', 'Volkswagen', 'Subaru']
 
 const BODY_TYPES = [
   { label: 'SUV / 4x4', icon: '🚙', param: 'SUV' },
@@ -132,13 +124,14 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-            {POPULAR_MAKES.map(({ name, emoji }) => (
+            {POPULAR_MAKES.map((name) => (
               <Link
                 key={name}
                 to={`/cars?brand=${name}`}
                 className="flex flex-col items-center gap-2 p-3 bg-gray-50 hover:bg-orange-50 hover:border-[#FF5400] border border-gray-200 rounded-xl transition-all group"
+                aria-label={name}
               >
-                <span className="text-2xl">{emoji}</span>
+                <CarBrandLogo brand={name} size={36} />
                 <span className="text-xs font-semibold text-gray-700 group-hover:text-[#FF5400]">{name}</span>
               </Link>
             ))}
