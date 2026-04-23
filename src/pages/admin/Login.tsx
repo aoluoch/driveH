@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Car, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Login() {
@@ -17,18 +17,27 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password.length > 256) {
+      setError('Password must not exceed 256 characters.')
+      return
+    }
+
     setSubmitting(true)
     try {
       await login(email.trim(), password)
       navigate('/admin/dashboard')
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message.includes('Invalid credentials')
-            ? 'Invalid email or password.'
-            : err.message
-          : 'Login failed.',
-      )
+      const msg = err instanceof Error ? err.message : ''
+      if (msg.includes('Invalid credentials') || msg.includes('password') || msg.includes('user')) {
+        setError('Invalid email or password.')
+      } else {
+        setError('Login failed. Please try again.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -38,13 +47,8 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Car size={20} className="text-white" />
-          </div>
-          <span className="text-2xl font-bold text-white">
-            DriveHub<span className="text-blue-400">.</span>
-          </span>
+        <div className="flex items-center justify-center mb-8">
+          <img src="/dl.jpg" alt="DriveHub" className="h-14 w-auto rounded-lg" />
         </div>
 
         {/* Card */}

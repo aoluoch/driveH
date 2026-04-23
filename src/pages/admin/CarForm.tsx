@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Plus, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, X } from 'lucide-react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import ImageUploader from '../../components/admin/ImageUploader'
-import AIAssistant from '../../components/admin/AIAssistant'
 import {
   createCar,
   deleteCarImage,
@@ -12,7 +11,7 @@ import {
   updateCar,
   uploadCarImage,
 } from '../../lib/cars'
-import type { AIGeneratedCar, CarFormData } from '../../types'
+import type { CarFormData } from '../../types'
 
 const EMPTY_FORM: CarFormData = {
   title: '',
@@ -80,7 +79,6 @@ export default function CarForm() {
   const [removedImages, setRemovedImages] = useState<string[]>([])
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [featureInput, setFeatureInput] = useState('')
-  const [showAI, setShowAI] = useState(false)
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof CarFormData | 'general', string>>>({})
@@ -100,23 +98,6 @@ export default function CarForm() {
   function set<K extends keyof CarFormData>(key: K, value: CarFormData[K]) {
     setForm((f) => ({ ...f, [key]: value }))
     setErrors((e) => ({ ...e, [key]: undefined }))
-  }
-
-  // ── AI fill ──────────────────────────────────────────────────────────────
-  function handleAIGenerate(data: AIGeneratedCar) {
-    setForm((f) => ({
-      ...f,
-      title:        data.title        || f.title,
-      brand:        data.brand        || f.brand,
-      model:        data.model        || f.model,
-      year:         data.year         || f.year,
-      fuelType:     (data.fuelType as CarFormData['fuelType'])       || f.fuelType,
-      transmission: (data.transmission as CarFormData['transmission']) || f.transmission,
-      engine:       data.engine       || f.engine,
-      condition:    (data.condition as CarFormData['condition'])     || f.condition,
-      description:  data.description  || f.description,
-      features:     data.features.length > 0 ? data.features : f.features,
-    }))
   }
 
   // ── Features ─────────────────────────────────────────────────────────────
@@ -224,14 +205,6 @@ export default function CarForm() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowAI(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all shadow-sm"
-          >
-            <Sparkles size={15} />
-            AI Assist
-          </button>
         </div>
 
         {errors.general && (
@@ -455,10 +428,6 @@ export default function CarForm() {
       </main>
 
       <Footer />
-
-      {showAI && (
-        <AIAssistant onGenerate={handleAIGenerate} onClose={() => setShowAI(false)} />
-      )}
     </div>
   )
 }

@@ -44,15 +44,3 @@ export interface DashboardStats {
   recentCars: Car[]
 }
 
-export interface AIGeneratedCar {
-  title: string
-  brand: string
-  model: string
-  year: number
-  fuelType: string
-  transmission: string
-  engine: string
-  condition: string
-  description: string
-  features: string[]
-}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Car, LayoutDashboard, LogIn, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, LogIn, LogOut, Menu, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Navbar() {
@@ -18,12 +18,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Car size={18} />
-            </div>
-            <span>DriveHub</span>
-            <span className="text-blue-500 text-xs font-medium ml-0.5">.</span>
+          <Link to="/" className="flex items-center">
+            <img src="/dl.jpg" alt="DriveHub" className="h-9 w-auto rounded-md" />
           </Link>
 
           {/* Desktop nav */}
