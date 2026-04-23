@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@layer base {
+	:root {
+		--font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+	}
+
+	html {
+		font-family: var(--font-sans);
+	}
+}
