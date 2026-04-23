@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Browse from './pages/Browse'
 import CarDetail from './pages/CarDetail'
@@ -15,10 +16,14 @@ import Terms from './pages/Terms'
 import Login from './pages/admin/Login'
 import Dashboard from './pages/admin/Dashboard'
 import CarForm from './pages/admin/CarForm'
+import Messages from './pages/admin/Messages'
+import Inquiries from './pages/admin/Inquiries'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 
 function App() {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* Public user routes */}
       <Route path="/" element={<Home />} />
@@ -63,10 +68,27 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/messages"
+        element={
+          <ProtectedRoute>
+            <Messages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/inquiries"
+        element={
+          <ProtectedRoute>
+            <Inquiries />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Home />} />
     </Routes>
+    </>
   )
 }
 

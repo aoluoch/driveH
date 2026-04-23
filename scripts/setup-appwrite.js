@@ -35,11 +35,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 const env = loadEnv()
 
-const ENDPOINT   = env.VITE_APPWRITE_ENDPOINT
-const PROJECT_ID = env.VITE_APPWRITE_PROJECT_ID
+const ENDPOINT    = env.VITE_APPWRITE_ENDPOINT
+const PROJECT_ID  = env.VITE_APPWRITE_PROJECT_ID
 const DATABASE_ID = env.VITE_APPWRITE_DATABASE_ID
-const API_KEY    = env.APPWRITE_API_KEY
-let   COLLECTION_ID = env.VITE_APPWRITE_CARS_COLLECTION_ID || ''
+const API_KEY     = env.APPWRITE_API_KEY
+let   CARS_COLLECTION_ID     = env.VITE_APPWRITE_CARS_COLLECTION_ID     || ''
+let   MESSAGES_COLLECTION_ID = env.VITE_APPWRITE_CONTACT_MESSAGES_COLLECTION_ID || ''
+let   INQUIRIES_COLLECTION_ID = env.VITE_APPWRITE_SELL_INQUIRIES_COLLECTION_ID  || ''
 
 if (!API_KEY) {
   console.error('❌  APPWRITE_API_KEY is not set in .env')
@@ -53,10 +55,23 @@ const client = new Client()
 
 const databases = new Databases(client)
 
-// ── Attribute definitions ─────────────────────────────────────────────────────
+// ── Attribute helpers ─────────────────────────────────────────────────────────
 
-async function createAttributes(collectionId) {
-  const steps = [
+async function runSteps(steps) {
+  for (const step of steps) {
+    let attr
+    try {
+      attr = await step()
+      console.log(`  ✔  ${attr.key}`)
+    } catch (e) {
+      console.error(`  ✖  Error: ${e.message}`)
+    }
+    await sleep(800)
+  }
+}
+
+async function createCarsAttributes(collectionId) {
+  await runSteps([
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'title',       255,  true),
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'brand',       100,  true),
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'model',       100,  true),
@@ -72,97 +87,142 @@ async function createAttributes(collectionId) {
           ['New', 'Used', 'Certified Pre-Owned'], true),
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'description', 5000, true),
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'location',    255,  true),
-    // Array of storage file IDs
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'images',      255,  false, null, true),
     () => databases.createBooleanAttribute(DATABASE_ID, collectionId, 'isSold',     false, false),
     () => databases.createEnumAttribute(DATABASE_ID, collectionId, 'bodyType',
           ['Sedan', 'Hatchback', 'SUV', 'Pickup', 'Van', 'Coupe', 'Convertible', 'Wagon', 'Minivan'], false),
-    // Array of feature strings (AI-generated or manual)
     () => databases.createStringAttribute(DATABASE_ID, collectionId, 'features',    255,  false, null, true),
-  ]
-
-  for (const step of steps) {
-    let attr
-    try {
-      attr = await step()
-      console.log(`  ✔  ${attr.key}`)
-    } catch (e) {
-      console.error(`  ✖  Error: ${e.message}`)
-    }
-    await sleep(800)
-  }
+  ])
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+async function createContactMessagesAttributes(collectionId) {
+  await runSteps([
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'name',    255, true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'email',   255, true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'subject', 255, true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'message', 5000, true),
+    () => databases.createEnumAttribute(DATABASE_ID, collectionId, 'status',
+          ['unread', 'read', 'replied'], false, 'unread'),
+  ])
+}
 
-async function main() {
-  console.log('\n🚗  DriveHub – Appwrite Setup\n')
+async function createSellInquiriesAttributes(collectionId) {
+  await runSteps([
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'name',       255,  true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'phone',      50,   true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'email',      255,  false),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'carDetails', 500,  true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'message',    2000, false),
+    () => databases.createEnumAttribute(DATABASE_ID, collectionId, 'status',
+          ['new', 'contacted', 'listed', 'closed'], false, 'new'),
+  ])
+}
 
-  if (COLLECTION_ID) {
-    // ── Update existing collection ──────────────────────────────────────────
-    console.log(`📦  Updating existing collection: ${COLLECTION_ID}`)
+// ── Generic collection setup ──────────────────────────────────────────────────
 
+async function setupCollection({ existingId, name, permissions, createAttrsFn }) {
+  let collectionId = existingId
+
+  if (collectionId) {
+    console.log(`\n📦  Updating existing "${name}" collection: ${collectionId}`)
     try {
-      await databases.updateCollection(DATABASE_ID, COLLECTION_ID, 'Cars', [
-        Permission.read(Role.any()),
-        Permission.create(Role.users()),
-        Permission.update(Role.users()),
-        Permission.delete(Role.users()),
-      ])
-      console.log('  ✔  Collection permissions updated')
+      await databases.updateCollection(DATABASE_ID, collectionId, name, permissions)
+      console.log('  ✔  Permissions updated')
     } catch (e) {
-      console.error('  ✖  Could not update collection permissions:', e.message)
+      console.error('  ✖  Could not update permissions:', e.message)
     }
 
     let existing
     try {
-      existing = await databases.listAttributes(DATABASE_ID, COLLECTION_ID)
+      existing = await databases.listAttributes(DATABASE_ID, collectionId)
     } catch (e) {
-      console.error('❌  Could not fetch collection attributes:', e.message)
-      process.exit(1)
+      console.error('  ✖  Could not fetch attributes:', e.message)
+      return collectionId
     }
 
     if (existing.attributes.length > 0) {
       console.log(`🗑   Deleting ${existing.attributes.length} existing attribute(s)…`)
       for (const attr of existing.attributes) {
         try {
-          await databases.deleteAttribute(DATABASE_ID, COLLECTION_ID, attr.key)
+          await databases.deleteAttribute(DATABASE_ID, collectionId, attr.key)
           console.log(`  ✔  Deleted: ${attr.key}`)
         } catch (e) {
           console.error(`  ✖  Could not delete ${attr.key}: ${e.message}`)
         }
         await sleep(600)
       }
-      console.log('\n⏳  Waiting for deletions to propagate…')
+      console.log('  ⏳  Waiting for deletions to propagate…')
       await sleep(3000)
     }
   } else {
-    // ── Create new collection ───────────────────────────────────────────────
-    console.log('📦  Creating new "Cars" collection…')
-    const col = await databases.createCollection(
-      DATABASE_ID,
-      ID.unique(),
-      'Cars',
-      [
-        Permission.read(Role.any()),
-        Permission.create(Role.users()),
-        Permission.update(Role.users()),
-        Permission.delete(Role.users()),
-      ],
-    )
-    COLLECTION_ID = col.$id
-    console.log(`  ✔  Collection created: ${COLLECTION_ID}`)
+    console.log(`\n📦  Creating new "${name}" collection…`)
+    const col = await databases.createCollection(DATABASE_ID, ID.unique(), name, permissions)
+    collectionId = col.$id
+    console.log(`  ✔  Collection created: ${collectionId}`)
     await sleep(1000)
   }
 
-  // ── Create attributes ─────────────────────────────────────────────────────
-  console.log('\n🔧  Creating attributes…')
-  await createAttributes(COLLECTION_ID)
+  console.log(`🔧  Creating attributes for "${name}"…`)
+  await createAttrsFn(collectionId)
+  return collectionId
+}
 
-  // ── Done ──────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+const publicWriteAdminRead = [
+  Permission.read(Role.users()),
+  Permission.create(Role.any()),
+  Permission.update(Role.users()),
+  Permission.delete(Role.users()),
+]
+
+const adminOnly = [
+  Permission.read(Role.users()),
+  Permission.create(Role.users()),
+  Permission.update(Role.users()),
+  Permission.delete(Role.users()),
+]
+
+async function main() {
+  console.log('\n🚗  DriveHub – Appwrite Setup\n')
+
+  // ── Cars collection ──────────────────────────────────────────────────────────
+  CARS_COLLECTION_ID = await setupCollection({
+    existingId: CARS_COLLECTION_ID,
+    name: 'Cars',
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.create(Role.users()),
+      Permission.update(Role.users()),
+      Permission.delete(Role.users()),
+    ],
+    createAttrsFn: createCarsAttributes,
+  })
+
+  // ── Contact Messages collection ───────────────────────────────────────────────
+  MESSAGES_COLLECTION_ID = await setupCollection({
+    existingId: MESSAGES_COLLECTION_ID,
+    name: 'ContactMessages',
+    permissions: publicWriteAdminRead,
+    createAttrsFn: createContactMessagesAttributes,
+  })
+
+  // ── Sell Inquiries collection ─────────────────────────────────────────────────
+  INQUIRIES_COLLECTION_ID = await setupCollection({
+    existingId: INQUIRIES_COLLECTION_ID,
+    name: 'SellInquiries',
+    permissions: publicWriteAdminRead,
+    createAttrsFn: createSellInquiriesAttributes,
+  })
+
+  // ── Done ──────────────────────────────────────────────────────────────────────
   console.log('\n✅  Setup complete!')
-  console.log('\n👉  Add this line to your .env file:')
-  console.log(`    VITE_APPWRITE_CARS_COLLECTION_ID=${COLLECTION_ID}\n`)
+  console.log('\n👉  Add / update these lines in your .env file:')
+  console.log(`    VITE_APPWRITE_CARS_COLLECTION_ID=${CARS_COLLECTION_ID}`)
+  console.log(`    VITE_APPWRITE_CONTACT_MESSAGES_COLLECTION_ID=${MESSAGES_COLLECTION_ID}`)
+  console.log(`    VITE_APPWRITE_SELL_INQUIRIES_COLLECTION_ID=${INQUIRIES_COLLECTION_ID}\n`)
+
+  void adminOnly
 }
 
 main().catch((e) => {

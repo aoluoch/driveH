@@ -25,6 +25,13 @@ export async function deleteCarImage(fileId: string): Promise<void> {
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
 
+/** Strip empty-string values so optional Appwrite enum fields don't throw validation errors */
+function sanitize<T extends Record<string, unknown>>(data: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== '')
+  ) as Partial<T>
+}
+
 export async function listCars(filters: CarFilters = {}): Promise<Car[]> {
   const queries: string[] = [Query.orderDesc('$createdAt'), Query.limit(100)]
 
@@ -64,12 +71,12 @@ export async function getCar(id: string): Promise<Car> {
 }
 
 export async function createCar(data: CarFormData): Promise<Car> {
-  const doc = await databases.createDocument(databaseId, carsCollectionId, ID.unique(), data)
+  const doc = await databases.createDocument(databaseId, carsCollectionId, ID.unique(), sanitize(data))
   return doc as unknown as Car
 }
 
 export async function updateCar(id: string, data: Partial<CarFormData>): Promise<Car> {
-  const doc = await databases.updateDocument(databaseId, carsCollectionId, id, data)
+  const doc = await databases.updateDocument(databaseId, carsCollectionId, id, sanitize(data))
   return doc as unknown as Car
 }
 

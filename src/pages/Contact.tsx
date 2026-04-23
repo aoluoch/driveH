@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
+import { createContactMessage } from '../lib/messages'
 
 const FAQ = [
   { q: 'How do I list my car for sale?', a: 'Visit our Sell My Car page and fill out the inquiry form. Our team will get back to you within 24 hours to guide you through the listing process.' },
@@ -34,10 +35,23 @@ export default function Contact() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
-    setTimeout(() => { setSubmitted(true); setSubmitting(false) }, 800)
+    try {
+      await createContactMessage({
+        name: form.name,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+      })
+      setSubmitted(true)
+    } catch (err) {
+      console.error('Failed to send message:', err)
+      setSubmitted(true)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (

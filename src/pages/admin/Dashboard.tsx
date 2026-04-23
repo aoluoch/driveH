@@ -4,6 +4,8 @@ import {
   Car,
   CheckCircle,
   Loader2,
+  Mail,
+  MessageSquare,
   PlusCircle,
   Tag,
   TrendingUp,
@@ -12,7 +14,9 @@ import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import CarCard from '../../components/cars/CarCard'
 import SearchFilter from '../../components/cars/SearchFilter'
+import AdminNav from '../../components/admin/AdminNav'
 import { listCars, deleteCar, toggleSoldStatus, getDashboardStats } from '../../lib/cars'
+import { getInboxStats } from '../../lib/messages'
 import type { Car as CarType, CarFilters, DashboardStats } from '../../types'
 
 function StatCard({
@@ -45,10 +49,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [carsLoading, setCarsLoading] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [inboxStats, setInboxStats] = useState({ unread: 0, newInquiries: 0 })
 
   useEffect(() => {
-    getDashboardStats()
-      .then(setStats)
+    Promise.all([getDashboardStats(), getInboxStats().catch(() => null)])
+      .then(([dashStats, inbox]) => {
+        setStats(dashStats)
+        if (inbox) setInboxStats({ unread: inbox.unreadMessages, newInquiries: inbox.newInquiries })
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -91,18 +99,12 @@ export default function Dashboard() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-sm text-slate-500 mt-0.5">Manage your DriveHub listings</p>
           </div>
-          <Link
-            to="/admin/cars/add"
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
-          >
-            <PlusCircle size={16} />
-            Add Car
-          </Link>
+          <AdminNav unread={inboxStats.unread} newInquiries={inboxStats.newInquiries} />
         </div>
 
         {/* Stats */}
@@ -112,7 +114,7 @@ export default function Dashboard() {
             <span className="text-sm">Loading stats…</span>
           </div>
         ) : stats ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             <StatCard
               icon={<Car size={20} />}
               label="Total Listings"
@@ -131,6 +133,22 @@ export default function Dashboard() {
               value={stats.sold}
               color="bg-gradient-to-br from-orange-500 to-red-500"
             />
+            <Link to="/admin/messages" className="block">
+              <StatCard
+                icon={<Mail size={20} />}
+                label="Unread Messages"
+                value={inboxStats.unread}
+                color="bg-gradient-to-br from-purple-500 to-purple-700"
+              />
+            </Link>
+            <Link to="/admin/inquiries" className="block">
+              <StatCard
+                icon={<MessageSquare size={20} />}
+                label="New Inquiries"
+                value={inboxStats.newInquiries}
+                color="bg-gradient-to-br from-pink-500 to-rose-600"
+              />
+            </Link>
           </div>
         ) : null}
 

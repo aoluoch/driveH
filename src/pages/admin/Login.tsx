@@ -4,7 +4,7 @@ import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Login() {
-  const { isAdmin, login, loading: authLoading } = useAuth()
+  const { user, isAdmin, login, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,6 +13,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
 
   if (!authLoading && isAdmin) return <Navigate to="/admin/dashboard" replace />
+  if (!authLoading && user && !isAdmin) return <Navigate to="/" replace />
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

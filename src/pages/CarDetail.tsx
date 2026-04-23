@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Calendar,
+  Car as CarBodyIcon,
   CheckCircle2,
   Fuel,
   Gauge,
@@ -207,6 +208,7 @@ export default function CarDetail() {
                   { icon: <Wrench size={16} />, label: 'Engine', value: car.engine || '—' },
                   { icon: <Gauge size={16} />, label: 'Mileage', value: car.mileage > 0 ? `${car.mileage.toLocaleString()} km` : '—' },
                   { icon: <MapPin size={16} />, label: 'Location', value: car.location },
+                  ...(car.bodyType ? [{ icon: <CarBodyIcon size={16} />, label: 'Body Type', value: car.bodyType }] : []),
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="bg-gray-50 rounded-xl p-3.5 border border-gray-100">
                     <div className="flex items-center gap-1.5 text-gray-400 mb-1.5 text-xs">

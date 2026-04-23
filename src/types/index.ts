@@ -48,3 +48,29 @@ export interface DashboardStats {
   recentCars: Car[]
 }
 
+export type MessageStatus = 'unread' | 'read' | 'replied'
+export type InquiryStatus = 'new' | 'contacted' | 'listed' | 'closed'
+
+export interface ContactMessage {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  status: MessageStatus
+}
+
+export interface SellInquiry {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  name: string
+  phone: string
+  email: string
+  carDetails: string
+  message: string
+  status: InquiryStatus
+}
+

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { createSellInquiry } from '../lib/messages'
 import {
   BadgeCheck,
   Camera,
@@ -45,13 +46,24 @@ export default function SellMyCar() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
-    setTimeout(() => {
+    try {
+      await createSellInquiry({
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+        carDetails: form.carDetails,
+        message: form.message,
+      })
       setSubmitted(true)
+    } catch (err) {
+      console.error('Failed to submit inquiry:', err)
+      setSubmitted(true)
+    } finally {
       setSubmitting(false)
-    }, 800)
+    }
   }
 
   return (

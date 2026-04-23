@@ -48,6 +48,8 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState('newest')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  const [refetchTick, setRefetchTick] = useState(0)
+
   const [filters, setFilters] = useState<CarFilters>(() => ({
     search: searchParams.get('search') || undefined,
     condition: searchParams.get('condition') || undefined,
@@ -56,6 +58,12 @@ export default function Browse() {
     brand: searchParams.get('brand') || undefined,
     maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
   }))
+
+  useEffect(() => {
+    const onFocus = () => setRefetchTick((t) => t + 1)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -67,7 +75,7 @@ export default function Browse() {
         setCars(sorted)
       })
       .finally(() => setLoading(false))
-  }, [filters, sortBy])
+  }, [filters, sortBy, refetchTick])
 
   function setFilter(patch: Partial<CarFilters>) {
     setFilters((f) => ({ ...f, ...patch }))

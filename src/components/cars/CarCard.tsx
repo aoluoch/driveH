@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Fuel, Gauge, Heart, MapPin, Pencil, Settings2, Trash2 } from 'lucide-react'
+import { Car as CarIcon, Fuel, Gauge, Heart, MapPin, Pencil, Settings2, Trash2 } from 'lucide-react'
 import type { Car } from '../../types'
 import { getCarImageUrl } from '../../lib/cars'
 import { useFavourites } from '../../context/FavouritesContext'
@@ -29,6 +29,7 @@ export default function CarCard({ car, isAdmin, variant = 'grid', onEdit, onDele
       : 'https://placehold.co/600x400/f5f5f5/aaaaaa?text=No+Image'
 
   const specs = [
+    car.bodyType && { icon: <CarIcon size={12} />, label: car.bodyType },
     car.fuelType && { icon: <Fuel size={12} />, label: car.fuelType },
     car.transmission && { icon: <Settings2 size={12} />, label: car.transmission },
     car.mileage > 0 && { icon: <Gauge size={12} />, label: `${car.mileage.toLocaleString()} km` },
