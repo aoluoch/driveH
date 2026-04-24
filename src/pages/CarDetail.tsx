@@ -20,6 +20,7 @@ import {
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 import { getCar, getCarImageUrl, getCarImageViewUrl } from '../lib/cars'
+import { CONTACT_PHONE as whatsapp, CONTACT_EMAIL as contactEmail } from '../lib/contact'
 import { useFavourites } from '../context/FavouritesContext'
 import type { Car } from '../types'
 
@@ -37,9 +38,6 @@ export default function CarDetail() {
   const [activeImg, setActiveImg] = useState(0)
   const [copied, setCopied] = useState(false)
   const { toggle, isFavourite } = useFavourites()
-
-  const whatsapp = import.meta.env.VITE_CONTACT_WHATSAPP as string
-  const contactEmail = import.meta.env.VITE_CONTACT_EMAIL as string
 
   useEffect(() => {
     if (!id) return

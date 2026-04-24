@@ -104,15 +104,20 @@ export default function Contact() {
                     </div>
                   </a>
                 )}
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Phone size={16} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Phone</p>
-                    <p className="text-xs text-gray-500">+254 700 000 000</p>
-                  </div>
-                </div>
+                {whatsapp && (
+                  <a
+                    href={`tel:${whatsapp.replace(/\D/g, '')}`}
+                    className="flex items-center gap-3 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    <div className="w-9 h-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Phone size={16} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">Phone</p>
+                      <p className="text-xs text-gray-500">{whatsapp}</p>
+                    </div>
+                  </a>
+                )}
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <div className="w-9 h-9 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
                     <MapPin size={16} />

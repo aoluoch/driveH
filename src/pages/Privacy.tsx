@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Shield } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
+import { CONTACT_EMAIL } from '../lib/contact'
 
 export default function Privacy() {
   const updated = 'April 2025'
@@ -84,7 +85,7 @@ export default function Privacy() {
               <li>Withdraw consent at any time where consent is the legal basis for processing</li>
               <li>Lodge a complaint with a data protection authority</li>
             </ul>
-            <p className="mt-3">To exercise any of these rights, please contact us at <a href="mailto:privacy@drivehub.co.ke" className="text-[#FF5400] hover:underline">privacy@drivehub.co.ke</a>.</p>
+            <p className="mt-3">To exercise any of these rights, please contact us at <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#FF5400] hover:underline">{CONTACT_EMAIL}</a>.</p>
           </section>
 
           <section>
@@ -107,7 +108,7 @@ export default function Privacy() {
             <p>If you have any questions or concerns about this Privacy Policy, please contact us:</p>
             <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm">
               <p className="font-semibold text-gray-900">DriveHub Privacy Team</p>
-              <p>Email: <a href="mailto:privacy@drivehub.co.ke" className="text-[#FF5400] hover:underline">privacy@drivehub.co.ke</a></p>
+              <p>Email: <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#FF5400] hover:underline">{CONTACT_EMAIL}</a></p>
               <p>Address: Westlands, Nairobi, Kenya</p>
             </div>
           </section>

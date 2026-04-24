@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
+import { CONTACT_PHONE as whatsapp, CONTACT_EMAIL as contactEmail } from '../lib/contact'
 
 const STEPS = [
   { icon: <Phone size={22} />, step: '01', title: 'Contact Us', desc: 'Fill out the form below or call us directly. We respond within 24 hours.' },
@@ -38,9 +39,6 @@ export default function SellMyCar() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', carDetails: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-
-  const whatsapp = import.meta.env.VITE_CONTACT_WHATSAPP as string
-  const contactEmail = import.meta.env.VITE_CONTACT_EMAIL as string
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))

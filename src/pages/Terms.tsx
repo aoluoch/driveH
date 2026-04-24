@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
+import { CONTACT_EMAIL } from '../lib/contact'
 
 export default function Terms() {
   const updated = 'April 2025'
@@ -94,7 +95,7 @@ export default function Terms() {
             <p>For questions about these Terms of Service, please contact us:</p>
             <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
               <p className="font-semibold text-gray-900">DriveHub Legal Team</p>
-              <p>Email: <a href="mailto:legal@drivehub.co.ke" className="text-[#FF5400] hover:underline">legal@drivehub.co.ke</a></p>
+              <p>Email: <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#FF5400] hover:underline">{CONTACT_EMAIL}</a></p>
               <p>Address: Westlands, Nairobi, Kenya</p>
             </div>
           </section>

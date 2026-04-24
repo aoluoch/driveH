@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Phone, Mail, MapPin } from 'lucide-react'
+import { CONTACT_PHONE, CONTACT_EMAIL } from '../../lib/contact'
 
 const FacebookIcon = ({ size = 15 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -108,14 +109,18 @@ export default function Footer() {
                 <MapPin size={15} className="mt-0.5 flex-shrink-0 text-[#FF5400]" />
                 <span>Nairobi, Kenya</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone size={15} className="flex-shrink-0 text-[#FF5400]" />
-                <a href="tel:+254700000000" className="hover:text-[#FF5400] transition-colors">+254 700 000 000</a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={15} className="flex-shrink-0 text-[#FF5400]" />
-                <a href="mailto:hello@drivehub.co.ke" className="hover:text-[#FF5400] transition-colors">hello@drivehub.co.ke</a>
-              </li>
+              {CONTACT_PHONE && (
+                <li className="flex items-center gap-3">
+                  <Phone size={15} className="flex-shrink-0 text-[#FF5400]" />
+                  <a href={`tel:${CONTACT_PHONE.replace(/\D/g, '')}`} className="hover:text-[#FF5400] transition-colors">{CONTACT_PHONE}</a>
+                </li>
+              )}
+              {CONTACT_EMAIL && (
+                <li className="flex items-center gap-3">
+                  <Mail size={15} className="flex-shrink-0 text-[#FF5400]" />
+                  <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-[#FF5400] transition-colors">{CONTACT_EMAIL}</a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
