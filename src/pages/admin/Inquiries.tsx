@@ -199,6 +199,7 @@ export default function Inquiries() {
   const [inboxStats, setInboxStats] = useState({ unread: 0, newInquiries: 0 })
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setError(null)
     Promise.all([listSellInquiries(), getInboxStats()])

@@ -1,23 +1,40 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
 
+const EMAIL_NOT_VERIFIED = 'EMAIL_NOT_VERIFIED'
+
+function friendlyLoginError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : ''
+  if (msg === 'email_not_verified') return EMAIL_NOT_VERIFIED
+  if (msg.includes('user_invalid_credentials') || msg.includes('Invalid credentials')) return 'Invalid email or password.'
+  if (msg.includes('user_not_found')) return 'No account found with this email.'
+  if (msg.includes('user_blocked')) return 'Your account has been blocked. Contact support.'
+  if (msg.includes('rate_limit') || msg.includes('too_many')) return 'Too many attempts. Please try again later.'
+  if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch')) return 'Connection failed. Check your internet and try again.'
+  return 'Login failed. Please check your credentials.'
+}
+
 export default function UserLogin() {
-  const { login, isAdmin, user } = useAuth()
-  const navigate = useNavigate()
+  const { login, isAdmin, user, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (user) {
-    navigate(isAdmin ? '/admin/dashboard' : '/')
-    return null
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 size={32} className="animate-spin text-[#FF5400]" />
+      </div>
+    )
   }
+
+  if (user) return <Navigate to={isAdmin ? '/admin/dashboard' : '/'} replace />
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -25,9 +42,8 @@ export default function UserLogin() {
     setLoading(true)
     try {
       await login(email, password)
-      navigate('/')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Login failed. Check your credentials.')
+      setError(friendlyLoginError(err))
     } finally {
       setLoading(false)
     }
@@ -49,11 +65,17 @@ export default function UserLogin() {
               <p className="text-gray-500 text-sm mt-1">Sign in to your DriveHub account</p>
             </div>
 
-            {error && (
+            {error === EMAIL_NOT_VERIFIED ? (
+              <div className="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                <p className="font-semibold mb-1">Email not verified</p>
+                <p>We've resent a verification link to your inbox. Click it to activate your account, then sign in here.</p>
+                <p className="mt-2 text-xs text-amber-600">Don't see the email? Check your spam folder.</p>
+              </div>
+            ) : error ? (
               <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
                 {error}
               </div>
-            )}
+            ) : null}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -69,7 +91,12 @@ export default function UserLogin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  <Link to="/forgot-password" className="text-xs text-[#FF5400] hover:underline font-medium">
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <input
                     type={showPass ? 'text' : 'password'}
@@ -105,14 +132,6 @@ export default function UserLogin() {
               </Link>
             </p>
 
-            <div className="border-t border-gray-100 mt-6 pt-5 text-center">
-              <p className="text-xs text-gray-400">
-                Are you an admin?{' '}
-                <Link to="/admin/login" className="text-gray-600 font-medium hover:text-[#FF5400]">
-                  Admin login →
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </main>

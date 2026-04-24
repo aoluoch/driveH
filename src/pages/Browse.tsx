@@ -12,7 +12,14 @@ const FUEL_TYPES = ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG']
 const TRANSMISSIONS = ['Automatic', 'Manual']
 const CONDITIONS = ['New', 'Used', 'Certified Pre-Owned']
 const BODY_TYPES = ['Sedan', 'Hatchback', 'SUV', 'Pickup', 'Van', 'Coupe', 'Convertible', 'Wagon', 'Minivan']
-const POPULAR_BRANDS = ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Ford', 'Nissan', 'Volkswagen', 'Subaru', 'Audi', 'Mazda', 'Hyundai', 'Kia']
+const POPULAR_BRANDS = [
+  'Toyota', 'Honda', 'BMW', 'Mercedes', 'Ford', 'Nissan', 'Volkswagen', 'Subaru',
+  'Audi', 'Mazda', 'Hyundai', 'Kia', 'Porsche', 'Volvo', 'Lexus', 'Mitsubishi',
+  'Jeep', 'Land Rover', 'Tesla', 'Ferrari', 'Lamborghini', 'Jaguar', 'Maserati',
+  'Bentley', 'Rolls-Royce', 'McLaren', 'Aston Martin', 'Mini', 'Polestar',
+  'Chevrolet', 'Dodge', 'Cadillac', 'Infiniti', 'Acura', 'Genesis', 'Fiat',
+  'Alfa Romeo', 'Lincoln', 'GMC', 'RAM',
+]
 const SORT_OPTIONS = [
   { label: 'Newest First', value: 'newest' },
   { label: 'Price: Low to High', value: 'price_asc' },
@@ -67,10 +74,11 @@ export default function Browse() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     listCars(filters)
       .then((data) => {
-        let sorted = [...data]
+        const sorted = [...data]
         if (sortBy === 'price_asc') sorted.sort((a, b) => a.price - b.price)
         else if (sortBy === 'price_desc') sorted.sort((a, b) => b.price - a.price)
         setCars(sorted)

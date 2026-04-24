@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { getCurrentUser, checkIsAdmin, loginAdmin, logoutAdmin, registerUser, type AppUser } from '../lib/auth'
+import { getCurrentUser, checkIsAdmin, loginUser, logoutUser, registerUser, type AppUser } from '../lib/auth'
 
 interface AuthContextValue {
   user: AppUser | null
@@ -24,17 +24,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function login(email: string, password: string) {
-    const u = await loginAdmin(email, password)
+    const u = await loginUser(email, password)
     setUser(u)
   }
 
   async function register(name: string, email: string, password: string) {
-    const u = await registerUser(name, email, password)
-    setUser(u)
+    await registerUser(name, email, password)
+    // No session is created after registration — user must verify email first
   }
 
   async function logout() {
-    await logoutAdmin()
+    await logoutUser()
     setUser(null)
   }
 
@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider')

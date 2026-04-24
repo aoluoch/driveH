@@ -88,6 +88,7 @@ export default function CarForm() {
     if (!id) return
     getCar(id)
       .then((car) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $id, $createdAt, $updatedAt, images, ...rest } = car
         setForm({ ...rest, images: [] })
         setExistingImages(images)

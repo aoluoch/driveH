@@ -13,7 +13,9 @@ import Contact from './pages/Contact'
 import Guides from './pages/Guides'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
-import Login from './pages/admin/Login'
+import VerifyEmail from './pages/VerifyEmail'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/admin/Dashboard'
 import CarForm from './pages/admin/CarForm'
 import Messages from './pages/admin/Messages'
@@ -39,9 +41,9 @@ function App() {
       <Route path="/guides" element={<Guides />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
-
-      {/* Admin auth */}
-      <Route path="/admin/login" element={<Login />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected admin */}
       <Route

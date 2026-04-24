@@ -4,18 +4,47 @@ import type { Models } from 'appwrite'
 
 export type AppUser = Models.User<Models.Preferences>
 
-export async function loginAdmin(email: string, password: string): Promise<AppUser> {
+export async function loginUser(email: string, password: string): Promise<AppUser> {
   await account.createEmailPasswordSession(email, password)
-  return account.get()
+  const user = await account.get()
+  if (!user.emailVerification) {
+    // Resend verification link and block the session so the user must verify first
+    const verifyUrl = `${window.location.origin}/verify-email`
+    try { await account.createVerification(verifyUrl) } catch { /* ignore duplicate-send errors */ }
+    await account.deleteSession('current')
+    throw new Error('email_not_verified')
+  }
+  return user
 }
 
-export async function registerUser(name: string, email: string, password: string): Promise<AppUser> {
+export async function registerUser(name: string, email: string, password: string): Promise<void> {
+  // 1. Create the Appwrite account
   await account.create(ID.unique(), email, password, name)
+  // 2. Open a temporary session to set preferences and send the verification email
   await account.createEmailPasswordSession(email, password)
-  return account.get()
+  // 3. Tag the account with role 'user' (admins are identified by VITE_ADMIN_EMAIL)
+  await account.updatePrefs({ role: 'user' })
+  // 4. Send verification email — user must click the link before they can log in
+  const verifyUrl = `${window.location.origin}/verify-email`
+  await account.createVerification(verifyUrl)
+  // 5. End the temporary session — no active session until email is verified
+  await account.deleteSession('current')
 }
 
-export async function logoutAdmin(): Promise<void> {
+export async function verifyEmail(userId: string, secret: string): Promise<void> {
+  await account.updateVerification(userId, secret)
+}
+
+export async function createPasswordRecovery(email: string): Promise<void> {
+  const recoveryUrl = `${window.location.origin}/reset-password`
+  await account.createRecovery(email, recoveryUrl)
+}
+
+export async function updatePasswordRecovery(userId: string, secret: string, newPassword: string): Promise<void> {
+  await account.updateRecovery(userId, secret, newPassword)
+}
+
+export async function logoutUser(): Promise<void> {
   await account.deleteSession('current')
 }
 

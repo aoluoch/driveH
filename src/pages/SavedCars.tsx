@@ -15,6 +15,7 @@ export default function SavedCars() {
 
   useEffect(() => {
     if (favourites.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCars([])
       setLoading(false)
       return
