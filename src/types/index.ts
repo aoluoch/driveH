@@ -74,3 +74,21 @@ export interface SellInquiry {
   status: InquiryStatus
 }
 
+export type GuideCategory = 'Buying Guides' | 'Finance & Costs' | 'Car Care & Maintenance' | 'Selling Your Car'
+
+export interface GuideArticle {
+  $id: string
+  $createdAt: string
+  $updatedAt: string
+  title: string
+  category: GuideCategory
+  excerpt: string
+  content: string
+  coverImageId: string
+  readTime: string
+  published: boolean
+  slug: string
+}
+
+export type GuideArticleFormData = Omit<GuideArticle, '$id' | '$createdAt' | '$updatedAt'>
+

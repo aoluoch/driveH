@@ -20,6 +20,9 @@ import Dashboard from './pages/admin/Dashboard'
 import CarForm from './pages/admin/CarForm'
 import Messages from './pages/admin/Messages'
 import Inquiries from './pages/admin/Inquiries'
+import GuidesAdmin from './pages/admin/GuidesAdmin'
+import GuideForm from './pages/admin/GuideForm'
+import GuideDetail from './pages/GuideDetail'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 
 function App() {
@@ -39,6 +42,7 @@ function App() {
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/guides" element={<Guides />} />
+      <Route path="/guides/:id" element={<GuideDetail />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -83,6 +87,30 @@ function App() {
         element={
           <ProtectedRoute>
             <Inquiries />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/guides"
+        element={
+          <ProtectedRoute>
+            <GuidesAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/guides/add"
+        element={
+          <ProtectedRoute>
+            <GuideForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/guides/:id/edit"
+        element={
+          <ProtectedRoute>
+            <GuideForm />
           </ProtectedRoute>
         }
       />

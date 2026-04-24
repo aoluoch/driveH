@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
@@ -9,6 +10,7 @@ import {
   DollarSign,
   FileText,
   Fuel,
+  Loader2,
   Search,
   Settings2,
   Shield,
@@ -17,64 +19,74 @@ import {
 } from 'lucide-react'
 import Navbar from '../components/layout/Navbar'
 import Footer from '../components/layout/Footer'
+import { listGuides, getGuideImageUrl } from '../lib/guides'
+import type { GuideArticle, GuideCategory } from '../types'
 
-const GUIDES = [
-  {
-    category: 'Buying Guides',
-    icon: <Car size={18} />,
-    color: 'bg-blue-100 text-blue-600',
-    guides: [
-      { title: 'How to Buy a Used Car: The Complete Guide', time: '8 min read', desc: 'Everything you need to know before buying a second-hand car in Kenya — from inspection to paperwork.' },
-      { title: 'New vs Used vs Certified Pre-Owned', time: '5 min read', desc: 'Understand the pros, cons, and pricing differences to make the right choice for your budget.' },
-      { title: 'How to Inspect a Car Before Buying', time: '6 min read', desc: 'A step-by-step checklist to help you spot hidden problems before handing over any money.' },
-      { title: 'Buying Your First Car: Beginner\'s Guide', time: '7 min read', desc: 'All you need to know about buying your very first car — what to look for and common mistakes to avoid.' },
-    ],
-  },
-  {
-    category: 'Finance & Costs',
-    icon: <DollarSign size={18} />,
-    color: 'bg-emerald-100 text-emerald-600',
-    guides: [
-      { title: 'How Car Loans Work in Kenya', time: '5 min read', desc: 'A clear guide to car financing, interest rates, deposit requirements, and what banks look for.' },
-      { title: 'Total Cost of Car Ownership', time: '6 min read', desc: 'Beyond the sticker price — insurance, servicing, fuel, and parking costs all add up.' },
-      { title: 'How to Negotiate a Car Price', time: '4 min read', desc: 'Proven strategies to get the best deal when buying from a dealer or private seller.' },
-      { title: 'Car Insurance in Kenya: What You Need', time: '5 min read', desc: 'Types of cover, what\'s required by law, and tips to get the cheapest premium.' },
-    ],
-  },
-  {
-    category: 'Car Care & Maintenance',
-    icon: <Wrench size={18} />,
-    color: 'bg-orange-100 text-orange-600',
-    guides: [
-      { title: 'Basic Car Maintenance Every Owner Should Know', time: '7 min read', desc: 'Oil changes, tyre rotation, brake checks — the essential tasks that keep your car running.' },
-      { title: 'How to Read Car Service History', time: '4 min read', desc: 'Understanding what a good service record looks like and red flags to watch out for.' },
-      { title: 'Petrol vs Diesel vs Hybrid: Which is Right for You?', time: '5 min read', desc: 'A practical comparison of fuel types to help you choose based on your driving habits.' },
-      { title: 'Common Car Problems & How to Spot Them', time: '6 min read', desc: 'Warning signs that your car may need attention — before they turn into expensive repairs.' },
-    ],
-  },
-  {
-    category: 'Selling Your Car',
-    icon: <TrendingUp size={18} />,
-    color: 'bg-purple-100 text-purple-600',
-    guides: [
-      { title: 'How to Get the Best Price for Your Car', time: '5 min read', desc: 'Tips to maximise what you earn when selling — presentation, timing, and where to list.' },
-      { title: 'How to Write a Great Car Listing', time: '4 min read', desc: 'What to include in your listing, how to take great photos, and what buyers want to see.' },
-      { title: 'Transferring Car Ownership in Kenya', time: '6 min read', desc: 'Step-by-step guide to the logbook transfer process at NTSA and the documents you\'ll need.' },
-      { title: 'How to Avoid Car Buying Scams', time: '5 min read', desc: 'Red flags to watch for when selling your car and how to stay safe during transactions.' },
-    ],
-  },
+const CATEGORY_META: Record<GuideCategory, { icon: React.ReactNode; color: string }> = {
+  'Buying Guides':          { icon: <Car size={18} />,        color: 'bg-blue-100 text-blue-600' },
+  'Finance & Costs':        { icon: <DollarSign size={18} />, color: 'bg-emerald-100 text-emerald-600' },
+  'Car Care & Maintenance': { icon: <Wrench size={18} />,     color: 'bg-orange-100 text-orange-600' },
+  'Selling Your Car':       { icon: <TrendingUp size={18} />, color: 'bg-purple-100 text-purple-600' },
+}
+
+const CATEGORY_ORDER: GuideCategory[] = [
+  'Buying Guides',
+  'Finance & Costs',
+  'Car Care & Maintenance',
+  'Selling Your Car',
 ]
 
 const QUICK_TIPS = [
-  { icon: <Search size={16} />, tip: 'Always verify a car\'s chassis number against NTSA records before buying.' },
+  { icon: <Search size={16} />, tip: "Always verify a car's chassis number against NTSA records before buying." },
   { icon: <Shield size={16} />, tip: 'Never pay a full deposit before seeing and test-driving the car in person.' },
-  { icon: <FileText size={16} />, tip: 'Request a copy of the logbook and verify the owner\'s name matches the seller.' },
+  { icon: <FileText size={16} />, tip: "Request a copy of the logbook and verify the owner's name matches the seller." },
   { icon: <Settings2 size={16} />, tip: 'Take the car to an independent mechanic for a pre-purchase inspection.' },
   { icon: <Fuel size={16} />, tip: 'Check fuel economy ratings and calculate realistic monthly running costs.' },
   { icon: <DollarSign size={16} />, tip: 'Factor in 3–5 years of ownership costs, not just the purchase price.' },
 ]
 
+function ArticleCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 animate-pulse">
+      <div className="h-3 bg-gray-200 rounded w-16 mb-3" />
+      <div className="h-4 bg-gray-200 rounded w-full mb-2" />
+      <div className="h-3 bg-gray-200 rounded w-5/6 mb-1" />
+      <div className="h-3 bg-gray-200 rounded w-4/6" />
+    </div>
+  )
+}
+
 export default function Guides() {
+  const [articlesByCategory, setArticlesByCategory] = useState<Record<GuideCategory, GuideArticle[]>>({
+    'Buying Guides': [],
+    'Finance & Costs': [],
+    'Car Care & Maintenance': [],
+    'Selling Your Car': [],
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    listGuides(undefined, true)
+      .then((articles) => {
+        const grouped: Record<GuideCategory, GuideArticle[]> = {
+          'Buying Guides': [],
+          'Finance & Costs': [],
+          'Car Care & Maintenance': [],
+          'Selling Your Car': [],
+        }
+        for (const article of articles) {
+          if (grouped[article.category]) {
+            grouped[article.category].push(article)
+          }
+        }
+        setArticlesByCategory(grouped)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const totalArticles = Object.values(articlesByCategory).reduce((sum, arr) => sum + arr.length, 0)
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
@@ -117,34 +129,81 @@ export default function Guides() {
       {/* Guide categories */}
       <section className="py-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          {GUIDES.map(({ category, icon, color, guides }) => (
-            <div key={category}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <span className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>{icon}</span>
-                  {category}
-                </h2>
+          {loading ? (
+            <>
+              <div className="flex items-center gap-3 text-gray-400">
+                <Loader2 size={18} className="animate-spin text-[#FF5400]" />
+                <span className="text-sm">Loading articles…</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {guides.map(({ title, time, desc }) => (
-                  <div
-                    key={title}
-                    className="bg-white rounded-2xl border border-gray-200 p-5 hover:border-[#FF5400] hover:shadow-sm transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
-                      <Clock size={12} />
-                      {time}
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-sm mb-2 group-hover:text-[#FF5400] transition-colors leading-snug">{title}</h3>
-                    <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-                    <div className="flex items-center gap-1 mt-3 text-xs text-[#FF5400] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                      Read guide <ArrowRight size={12} />
-                    </div>
+              {CATEGORY_ORDER.map((cat) => (
+                <div key={cat}>
+                  <div className="h-7 bg-gray-200 rounded-xl w-48 mb-5 animate-pulse" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[1, 2, 3, 4].map((i) => <ArticleCardSkeleton key={i} />)}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </>
+          ) : totalArticles === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <BookOpen size={40} className="mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500 font-medium">No articles published yet</p>
+              <p className="text-sm text-gray-400 mt-1">Check back soon for expert guides.</p>
             </div>
-          ))}
+          ) : (
+            CATEGORY_ORDER.map((category) => {
+              const articles = articlesByCategory[category]
+              if (articles.length === 0) return null
+              const { icon, color } = CATEGORY_META[category]
+              return (
+                <div key={category}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <span className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>{icon}</span>
+                      {category}
+                    </h2>
+                    <span className="text-xs text-gray-400">{articles.length} article{articles.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {articles.map((article) => (
+                      <Link
+                        key={article.$id}
+                        to={`/guides/${article.$id}`}
+                        className="bg-white rounded-2xl border border-gray-200 hover:border-[#FF5400] hover:shadow-sm transition-all group overflow-hidden"
+                      >
+                        {article.coverImageId && (
+                          <div className="h-36 overflow-hidden">
+                            <img
+                              src={getGuideImageUrl(article.coverImageId, 600)}
+                              alt={article.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        )}
+                        <div className="p-5">
+                          {article.readTime && (
+                            <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                              <Clock size={12} />
+                              {article.readTime}
+                            </div>
+                          )}
+                          <h3 className="font-bold text-gray-900 text-sm mb-2 group-hover:text-[#FF5400] transition-colors leading-snug">
+                            {article.title}
+                          </h3>
+                          {article.excerpt && (
+                            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{article.excerpt}</p>
+                          )}
+                          <div className="flex items-center gap-1 mt-3 text-xs text-[#FF5400] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                            Read more <ArrowRight size={12} />
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
       </section>
 

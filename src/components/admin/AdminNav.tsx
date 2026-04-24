@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Car, LayoutDashboard, Mail, MessageSquare } from 'lucide-react'
+import { BookOpen, Car, LayoutDashboard, Mail, MessageSquare } from 'lucide-react'
 
 const links = [
   { to: '/admin/dashboard', icon: <LayoutDashboard size={15} />, label: 'Dashboard' },
   { to: '/admin/messages',  icon: <Mail size={15} />,            label: 'Messages' },
   { to: '/admin/inquiries', icon: <MessageSquare size={15} />,   label: 'Sell Inquiries' },
+  { to: '/admin/guides',    icon: <BookOpen size={15} />,        label: 'Guides' },
 ]
 
 export default function AdminNav({ unread = 0, newInquiries = 0 }: { unread?: number; newInquiries?: number }) {

@@ -31,6 +31,21 @@ function loadEnv() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+async function retry(fn, label = '', attempts = 5, baseDelayMs = 1000) {
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      const isLast = i === attempts
+      const transient = e.message?.includes('fetch failed') || e.message?.includes('ECONNRESET') || e.message?.includes('timeout')
+      if (isLast || !transient) throw e
+      const wait = baseDelayMs * 2 ** (i - 1)
+      console.log(`  ↻  ${label} — retrying in ${wait}ms (attempt ${i}/${attempts}): ${e.message}`)
+      await sleep(wait)
+    }
+  }
+}
+
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const env = loadEnv()
@@ -42,6 +57,7 @@ const API_KEY     = env.APPWRITE_API_KEY
 let   CARS_COLLECTION_ID     = env.VITE_APPWRITE_CARS_COLLECTION_ID     || ''
 let   MESSAGES_COLLECTION_ID = env.VITE_APPWRITE_CONTACT_MESSAGES_COLLECTION_ID || ''
 let   INQUIRIES_COLLECTION_ID = env.VITE_APPWRITE_SELL_INQUIRIES_COLLECTION_ID  || ''
+let   GUIDES_COLLECTION_ID    = env.VITE_APPWRITE_GUIDE_ARTICLES_COLLECTION_ID   || ''
 
 if (!API_KEY) {
   console.error('❌  APPWRITE_API_KEY is not set in .env')
@@ -59,14 +75,13 @@ const databases = new Databases(client)
 
 async function runSteps(steps) {
   for (const step of steps) {
-    let attr
     try {
-      attr = await step()
+      const attr = await retry(step, 'attribute')
       console.log(`  ✔  ${attr.key}`)
     } catch (e) {
       console.error(`  ✖  Error: ${e.message}`)
     }
-    await sleep(800)
+    await sleep(600)
   }
 }
 
@@ -118,6 +133,20 @@ async function createSellInquiriesAttributes(collectionId) {
   ])
 }
 
+async function createGuideArticlesAttributes(collectionId) {
+  await runSteps([
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'title',        255,    true),
+    () => databases.createEnumAttribute(DATABASE_ID, collectionId, 'category',
+          ['Buying Guides', 'Finance & Costs', 'Car Care & Maintenance', 'Selling Your Car'], true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'excerpt',      1000,   false, ''),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'content',      500000, true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'coverImageId', 255,    false, ''),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'readTime',     50,     false, ''),
+    () => databases.createBooleanAttribute(DATABASE_ID, collectionId, 'published',   false,  true),
+    () => databases.createStringAttribute(DATABASE_ID, collectionId, 'slug',         255,    false, ''),
+  ])
+}
+
 // ── Generic collection setup ──────────────────────────────────────────────────
 
 async function setupCollection({ existingId, name, permissions, createAttrsFn }) {
@@ -126,7 +155,7 @@ async function setupCollection({ existingId, name, permissions, createAttrsFn })
   if (collectionId) {
     console.log(`\n📦  Updating existing "${name}" collection: ${collectionId}`)
     try {
-      await databases.updateCollection(DATABASE_ID, collectionId, name, permissions)
+      await retry(() => databases.updateCollection(DATABASE_ID, collectionId, name, permissions), 'updateCollection')
       console.log('  ✔  Permissions updated')
     } catch (e) {
       console.error('  ✖  Could not update permissions:', e.message)
@@ -134,7 +163,7 @@ async function setupCollection({ existingId, name, permissions, createAttrsFn })
 
     let existing
     try {
-      existing = await databases.listAttributes(DATABASE_ID, collectionId)
+      existing = await retry(() => databases.listAttributes(DATABASE_ID, collectionId), 'listAttributes')
     } catch (e) {
       console.error('  ✖  Could not fetch attributes:', e.message)
       return collectionId
@@ -144,7 +173,7 @@ async function setupCollection({ existingId, name, permissions, createAttrsFn })
       console.log(`🗑   Deleting ${existing.attributes.length} existing attribute(s)…`)
       for (const attr of existing.attributes) {
         try {
-          await databases.deleteAttribute(DATABASE_ID, collectionId, attr.key)
+          await retry(() => databases.deleteAttribute(DATABASE_ID, collectionId, attr.key), `delete:${attr.key}`)
           console.log(`  ✔  Deleted: ${attr.key}`)
         } catch (e) {
           console.error(`  ✖  Could not delete ${attr.key}: ${e.message}`)
@@ -156,7 +185,7 @@ async function setupCollection({ existingId, name, permissions, createAttrsFn })
     }
   } else {
     console.log(`\n📦  Creating new "${name}" collection…`)
-    const col = await databases.createCollection(DATABASE_ID, ID.unique(), name, permissions)
+    const col = await retry(() => databases.createCollection(DATABASE_ID, ID.unique(), name, permissions), 'createCollection')
     collectionId = col.$id
     console.log(`  ✔  Collection created: ${collectionId}`)
     await sleep(1000)
@@ -215,12 +244,38 @@ async function main() {
     createAttrsFn: createSellInquiriesAttributes,
   })
 
+  // ── Guide Articles collection ─────────────────────────────────────────────────
+  GUIDES_COLLECTION_ID = await setupCollection({
+    existingId: GUIDES_COLLECTION_ID,
+    name: 'GuideArticles',
+    permissions: [
+      Permission.read(Role.any()),
+      Permission.create(Role.users()),
+      Permission.update(Role.users()),
+      Permission.delete(Role.users()),
+    ],
+    createAttrsFn: createGuideArticlesAttributes,
+  })
+
+  // ── Guide Articles indexes ────────────────────────────────────────────────────
+  console.log('\n🔍  Creating indexes for GuideArticles…')
+  for (const [key, order] of [['published', 'ASC'], ['category', 'ASC']]) {
+    try {
+      await retry(() => databases.createIndex(DATABASE_ID, GUIDES_COLLECTION_ID, key, 'key', [key], [order]), `index:${key}`)
+      console.log(`  ✔  Index: ${key}`)
+    } catch (e) {
+      console.log(`  ⚠  Index ${key}: ${e.message}`)
+    }
+    await sleep(800)
+  }
+
   // ── Done ──────────────────────────────────────────────────────────────────────
   console.log('\n✅  Setup complete!')
   console.log('\n👉  Add / update these lines in your .env file:')
   console.log(`    VITE_APPWRITE_CARS_COLLECTION_ID=${CARS_COLLECTION_ID}`)
   console.log(`    VITE_APPWRITE_CONTACT_MESSAGES_COLLECTION_ID=${MESSAGES_COLLECTION_ID}`)
-  console.log(`    VITE_APPWRITE_SELL_INQUIRIES_COLLECTION_ID=${INQUIRIES_COLLECTION_ID}\n`)
+  console.log(`    VITE_APPWRITE_SELL_INQUIRIES_COLLECTION_ID=${INQUIRIES_COLLECTION_ID}`)
+  console.log(`    VITE_APPWRITE_GUIDE_ARTICLES_COLLECTION_ID=${GUIDES_COLLECTION_ID}\n`)
 
   void adminOnly
 }

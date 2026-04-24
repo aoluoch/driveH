@@ -19,6 +19,7 @@ export const appwriteConfig = {
   carsCollectionId: (import.meta.env.VITE_APPWRITE_CARS_COLLECTION_ID as string) ?? '',
   contactMessagesCollectionId: (import.meta.env.VITE_APPWRITE_CONTACT_MESSAGES_COLLECTION_ID as string) ?? '',
   sellInquiriesCollectionId: (import.meta.env.VITE_APPWRITE_SELL_INQUIRIES_COLLECTION_ID as string) ?? '',
+  guideArticlesCollectionId: (import.meta.env.VITE_APPWRITE_GUIDE_ARTICLES_COLLECTION_ID as string) ?? '',
 }
 
 export const appwriteClient = new Client()
