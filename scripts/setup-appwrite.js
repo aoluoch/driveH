@@ -11,7 +11,7 @@
  *   4. Copy the printed collection ID into VITE_APPWRITE_CARS_COLLECTION_ID in .env.
  */
 
-import { Client, Databases, ID, Permission, Role } from 'node-appwrite'
+import { Client, Databases, Storage, ID, Permission, Role } from 'node-appwrite'
 import { readFileSync } from 'fs'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -70,6 +70,7 @@ const client = new Client()
   .setKey(API_KEY)
 
 const databases = new Databases(client)
+const storageClient = new Storage(client)
 
 // ── Attribute helpers ─────────────────────────────────────────────────────────
 
@@ -278,6 +279,34 @@ async function main() {
   console.log(`    VITE_APPWRITE_GUIDE_ARTICLES_COLLECTION_ID=${GUIDES_COLLECTION_ID}\n`)
 
   void adminOnly
+
+  // ── Storage bucket permissions ────────────────────────────────────────────────
+  const BUCKET_ID = env.VITE_APPWRITE_BUCKET_ID
+  if (BUCKET_ID) {
+    console.log(`\n🪣  Updating storage bucket permissions: ${BUCKET_ID}`)
+    try {
+      const bucket = await retry(() => storageClient.getBucket(BUCKET_ID), 'getBucket')
+      await retry(
+        () => storageClient.updateBucket(
+          BUCKET_ID,
+          bucket.name,
+          [
+            Permission.read(Role.any()),
+            Permission.create(Role.users()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
+          ],
+        ),
+        'updateBucket',
+      )
+      console.log('  ✔  Bucket permissions updated (create allowed for users)')
+    } catch (e) {
+      console.error('  ✖  Could not update bucket:', e.message)
+      console.log('  ℹ  Fix manually: Appwrite Console → Storage → your bucket → Permissions → add Create for users')
+    }
+  } else {
+    console.log('\n⚠️  VITE_APPWRITE_BUCKET_ID not set — skipping bucket permission update')
+  }
 }
 
 main().catch((e) => {

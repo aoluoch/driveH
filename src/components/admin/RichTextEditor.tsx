@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -68,6 +68,7 @@ function Divider() {
 
 export default function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -89,13 +90,17 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !editor) return
+    setUploading(true)
     try {
       const fileId = await uploadGuideImage(file)
       const url = getGuideImageUrl(fileId, 1200)
       editor.chain().focus().setImage({ src: url, alt: file.name }).run()
-    } catch {
-      alert('Image upload failed. Please try again.')
+    } catch (err) {
+      console.error('Guide image upload error:', err)
+      const msg = err instanceof Error ? err.message : String(err)
+      alert(`Image upload failed: ${msg}`)
     } finally {
+      setUploading(false)
       e.target.value = ''
     }
   }
@@ -138,7 +143,9 @@ export default function RichTextEditor({ content, onChange, placeholder }: RichT
         <ToolbarBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule"><Minus size={15} /></ToolbarBtn>
         <Divider />
         <ToolbarBtn onClick={handleSetLink} active={editor.isActive('link')} title="Insert Link"><Link2 size={15} /></ToolbarBtn>
-        <ToolbarBtn onClick={() => imageInputRef.current?.click()} title="Upload Image"><ImagePlus size={15} /></ToolbarBtn>
+        <ToolbarBtn onClick={() => !uploading && imageInputRef.current?.click()} title={uploading ? 'Uploading…' : 'Upload Image'}>
+          {uploading ? <span className="text-[10px] font-medium px-1">…</span> : <ImagePlus size={15} />}
+        </ToolbarBtn>
         <input
           ref={imageInputRef}
           type="file"

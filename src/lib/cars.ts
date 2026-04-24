@@ -1,5 +1,6 @@
-import { ID, Query } from 'appwrite'
+import { ID, Permission, Role, Query } from 'appwrite'
 import { databases, storage, appwriteConfig } from './appwrite'
+import { compressImage } from './imageUtils'
 import type { Car, CarFormData, CarFilters } from '../types'
 
 const { databaseId, carsCollectionId, bucketId, endpoint, projectId } = appwriteConfig
@@ -15,7 +16,13 @@ export function getCarImageViewUrl(fileId: string): string {
 }
 
 export async function uploadCarImage(file: File): Promise<string> {
-  const result = await storage.createFile(bucketId, ID.unique(), file)
+  const compressed = await compressImage(file)
+  const result = await storage.createFile(
+    bucketId,
+    ID.unique(),
+    compressed,
+    [Permission.read(Role.any()), Permission.delete(Role.users())],
+  )
   return result.$id
 }
 
