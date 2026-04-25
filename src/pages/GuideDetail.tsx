@@ -43,11 +43,20 @@ export default function GuideDetail() {
 
   useEffect(() => {
     if (!id) return
-    setLoading(true)
-    getGuide(id)
-      .then(setArticle)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
+    let cancelled = false
+    const fetch = async () => {
+      setLoading(true)
+      try {
+        const data = await getGuide(id)
+        if (!cancelled) setArticle(data)
+      } catch (e: unknown) {
+        if (!cancelled) setError((e as Error).message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetch()
+    return () => { cancelled = true }
   }, [id])
 
   const meta = article ? CATEGORY_META[article.category] : null

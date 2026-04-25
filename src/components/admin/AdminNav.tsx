@@ -32,7 +32,7 @@ export default function AdminNav({ unread = 0, newInquiries = 0 }: { unread?: nu
             {label}
             {badge > 0 && (
               <span
-                className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] text-[10px] font-bold rounded-full flex items-center justify-center px-1 ${
+                className={`absolute -top-1 -right-1 min-w-4.5 h-4.5 text-[10px] font-bold rounded-full flex items-center justify-center px-1 ${
                   active ? 'bg-white text-blue-600' : 'bg-red-500 text-white'
                 }`}
               >
